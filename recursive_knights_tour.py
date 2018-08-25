@@ -5,26 +5,21 @@
 #Define board size and starting location
 boardSize = 5
 startX = 1
-startY = 1
+startY = 5
 
 def _debug_():
-	prev=[[3,2],[6,5],[3,6],[6,3]]
-	prev=[[3,2],[3,6]]
 	x=1
-	y=1
-	#print(_findPossMoves_(x,y,prev))
-	#print(_numInDir_(_findPossMoves_(x,y,prev),x,y,prev))
-	_move_(x,y,[])
+	y=5
+	a,b,c,path=_move_(x,y,[])
+	print(path)
 	return
-	
+
 	
 def _main_():
 	return
-	
+'''
 #moves from parameter x,y to returned x,y
 def _move_(x,y,prevLocs):
-	if(x==1 and y==2):
-		print("BREAK")
 	possDirections = _findPossMoves_(x,y,prevLocs)
 	if sum(possDirections)==0:#dead end
 		print(str(x)+","+str(y)+" is a dead end")
@@ -50,6 +45,36 @@ def _move_(x,y,prevLocs):
 			break
 
 	print("FINISHED",prevLocs)
+'''
+		
+#moves from parameter x,y to returned x,y
+#return 0 = hit dead end
+#return -1 = hit final condition
+def _move_(x,y,prevLocs):
+	prevLocs.append([x,y])
+	print([x,y])
+	if len(prevLocs)==boardSize**2: #final condition
+		return -1,x,y,prevLocs
+	possDirs=_findPossMoves_(x,y,prevLocs)
+	movesInDir=_numInDir_(possDirs,x,y,prevLocs)
+	for element in possDirs:
+		if sum(movesInDir)==0: #dead end
+			if len(prevLocs)==boardSize**2-1:
+				finalMove=possDirs.index(min(x for x in possDirs if x > 0))
+				newX,newY=directionsDict(finalMove,x,y)
+				movesInDir[finalMove],x,y,prevLocs=_move_(newX,newY,prevLocs)
+				return -1,x,y,prevLocs
+			print([x,y], "is a dead end")
+			prevLocs=prevLocs[:-1]
+			x=prevLocs[len(prevLocs)-1][0]
+			y=prevLocs[len(prevLocs)-1][1]
+			return 0,x,y,prevLocs
+	
+		dirWMinMoves=movesInDir.index(min(x for x in movesInDir if x > 0))
+		newX,newY=directionsDict(dirWMinMoves,x,y)
+		movesInDir[dirWMinMoves],x,y,prevLocs=_move_(newX,newY,prevLocs)
+		if movesInDir[dirWMinMoves]==-1:
+			return -1,x,y,prevLocs
 	
 	
 #returns array of legal directions to move in excluding
@@ -116,8 +141,8 @@ def _numInDir_(dirs,x,y, prevLocs):
 	for i in range(len(dirs)):
 		if(dirs[i]==1):
 			newX,newY=directionsDict(i,x,y)
-			retArr[i]=sum(_findPossMoves_(newX,newY,[[x,y]]))
-			return retArr
+			retArr[i]=sum(_findPossMoves_(newX,newY,prevLocs))
+	return retArr
 
 
 #Input index of directions array, x, and y
