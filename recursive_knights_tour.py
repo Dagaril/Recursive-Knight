@@ -1,74 +1,83 @@
-#import pygame
+import turtle, datetime
 
 #Array format: [luu,ruu,ldd,rdd,lld,rrd,llu,rru]
 
 #Define board size and starting location
-boardSize = 5
-startX = 1
-startY = 5
-
-def _debug_():
-	x=1
-	y=5
-	a,b,c,path=_move_(x,y,[])
-	print(path)
-	return
-
+boardSize = 26
+startX = 4
+startY = 4
 	
 def _main_():
+	print(datetime.datetime.now())
+	a,b,c,path=_move_(startX,startY,[])
+	print(datetime.datetime.now())
+	print(path)
+	if len(path)>1:
+		_draw_(path)
 	return
-'''
-#moves from parameter x,y to returned x,y
-def _move_(x,y,prevLocs):
-	possDirections = _findPossMoves_(x,y,prevLocs)
-	if sum(possDirections)==0:#dead end
-		print(str(x)+","+str(y)+" is a dead end")
-		return 0,prevLocs
-	if len(prevLocs)==boardSize**2: #final condition
-		return -1,prevLocs
-	prevLocs.append([x,y])
-	numMovesInDir=_numInDir_(possDirections,x,y,prevLocs)
-	for i in range(len(possDirections)):
-		if sum(possDirections)==0:#dead end
-			print(str(x)+","+str(y)+" is a dead end")
-			prevLocs=prevLocs[:-1]
-			return 0,prevLocs
-		minI=numMovesInDir.index(min(x for x in numMovesInDir if x > 0))
-		x,y=directionsDict(minI,x,y)
-		print([x,y])
-		possDirections[minI],prevLocs=_move_(x,y,prevLocs)
-		if possDirections[minI]==0:
-			numMovesInDir[minI]=0
-			x=prevLocs[len(prevLocs)-1][0]
-			y=prevLocs[len(prevLocs)-1][1]
-		if possDirections[minI]==-1:
-			break
 
-	print("FINISHED",prevLocs)
-'''
-		
+def _draw_(path):
+	initTurtle()
+	for i in range(len(path)):
+		stampAt(path[i][0],path[i][1],i+1)
+
+def initTurtle():
+	global sqSize, fontSize
+	turtle.setup(1000,1000,0,0)
+	turtle.title("Knight's Tour")
+	turtle.setworldcoordinates(0,1000,1000,0)
+	turtle.ht()
+	turtle.pen(pensize=3)
+	turtle.speed(0)
+	sqSize=turtle.window_height()/(boardSize)
+	for r in range(0,boardSize+1): #draw horizontal rows
+		goto(-2,r*sqSize-2)
+		drto(boardSize*sqSize+0,r*sqSize-2)
+	for c in range(0,boardSize+1): #draw vertical columns
+		goto(c*sqSize-2,0)
+		drto(c*sqSize-2,boardSize*sqSize+0)
+	if boardSize>25:
+		fontSize=10
+	else:
+		fontSize=16
+	
+def goto(x,y):
+	turtle.pu()
+	turtle.goto(x,y)
+	turtle.pd()
+	
+def drto(x,y):
+	turtle.goto(x,y)
+	
+def stampAt(c,r,step):
+	goto(c*sqSize-sqSize/2,(boardSize-r+1)*sqSize-sqSize/3)
+	turtle.write(step, False, "center", ("Arial",fontSize,"normal"))
+   
 #moves from parameter x,y to returned x,y
 #return 0 = hit dead end
 #return -1 = hit final condition
 def _move_(x,y,prevLocs):
 	prevLocs.append([x,y])
-	print([x,y])
-	if len(prevLocs)==boardSize**2: #final condition
-		return -1,x,y,prevLocs
 	possDirs=_findPossMoves_(x,y,prevLocs)
 	movesInDir=_numInDir_(possDirs,x,y,prevLocs)
 	for element in possDirs:
+		if(len(prevLocs)==1):
+			print(x,y,movesInDir)
 		if sum(movesInDir)==0: #dead end
-			if len(prevLocs)==boardSize**2-1:
+			if len(prevLocs)==boardSize**2-1: #skip final move and go down stack
 				finalMove=possDirs.index(min(x for x in possDirs if x > 0))
 				newX,newY=directionsDict(finalMove,x,y)
-				movesInDir[finalMove],x,y,prevLocs=_move_(newX,newY,prevLocs)
-				return -1,x,y,prevLocs
-			print([x,y], "is a dead end")
-			prevLocs=prevLocs[:-1]
-			x=prevLocs[len(prevLocs)-1][0]
-			y=prevLocs[len(prevLocs)-1][1]
-			return 0,x,y,prevLocs
+				prevLocs.append([newX,newY])
+				return -1,newX,newY,prevLocs
+#                       print([x,y], "is a dead end")
+			if(len(prevLocs)==1):
+				if(sum(movesInDir)==0):
+					return 0,x,y,["NO SOLUTION"]
+			else:
+				prevLocs=prevLocs[:-1]
+				x=prevLocs[len(prevLocs)-1][0]
+				y=prevLocs[len(prevLocs)-1][1]
+				return 0,x,y,prevLocs
 	
 		dirWMinMoves=movesInDir.index(min(x for x in movesInDir if x > 0))
 		newX,newY=directionsDict(dirWMinMoves,x,y)
@@ -165,4 +174,4 @@ def directionsDict(index,x,y):
 	elif(index==7):
 		return x+2,y+1
 	
-_debug_()
+_main_()
