@@ -3,9 +3,15 @@ import turtle, datetime
 #Array format: [luu,ruu,ldd,rdd,lld,rrd,llu,rru]
 
 #Define board size and starting location
-boardSize = 26
-startX = 4
-startY = 4
+boardSize = 20
+startX = 1
+startY = 1
+
+reqdClsdTr = True
+
+if boardSize%2==1 and reqdClsdTr:
+	print("Can't have closed tour with odd board width and height,"+"\nCONTINUING TO LOOK FOR OPEN TOUR")
+	reqdClsdTr =False
 	
 def _main_():
 	print(datetime.datetime.now())
@@ -18,8 +24,10 @@ def _main_():
 
 def _draw_(path):
 	initTurtle()
-	for i in range(len(path)):
+	stampColor(path[0][0],path[0][1],1)
+	for i in range(1,len(path)-1):
 		stampAt(path[i][0],path[i][1],i+1)
+	stampColor(path[len(path)-1][0],path[len(path)-1][1],len(path))
 
 def initTurtle():
 	global sqSize, fontSize
@@ -52,6 +60,12 @@ def drto(x,y):
 def stampAt(c,r,step):
 	goto(c*sqSize-sqSize/2,(boardSize-r+1)*sqSize-sqSize/3)
 	turtle.write(step, False, "center", ("Arial",fontSize,"normal"))
+
+def stampColor(c,r,step):
+	goto(c*sqSize-sqSize/2,(boardSize-r+1)*sqSize-sqSize/3)
+	turtle.pencolor("red")
+	turtle.write(step, False, "center", ("Arial",fontSize,"normal"))
+	turtle.pencolor("black")
    
 #moves from parameter x,y to returned x,y
 #return 0 = hit dead end
@@ -67,8 +81,18 @@ def _move_(x,y,prevLocs):
 			if len(prevLocs)==boardSize**2-1: #skip final move and go down stack
 				finalMove=possDirs.index(min(x for x in possDirs if x > 0))
 				newX,newY=directionsDict(finalMove,x,y)
-				prevLocs.append([newX,newY])
-				return -1,newX,newY,prevLocs
+				if not reqdClsdTr:
+					prevLocs.append([newX,newY])
+					return -1,newX,newY,prevLocs
+				else: #check for successful closed loop
+					if _checkClosedTour_(newX,newY): #if a closed loop, finish
+						prevLocs.append([newX,newY])
+						return -1,newX,newY,prevLocs
+					else: #not closed loop, treat as dead end
+						prevLocs=prevLocs[:-1]
+						x=prevLocs[len(prevLocs)-1][0]
+						y=prevLocs[len(prevLocs)-1][1]
+						return 0,x,y,prevLocs
 #                       print([x,y], "is a dead end")
 			if(len(prevLocs)==1):
 				if(sum(movesInDir)==0):
@@ -173,5 +197,11 @@ def directionsDict(index,x,y):
 		return x-2,y+1
 	elif(index==7):
 		return x+2,y+1
-	
+
+def _checkClosedTour_(x,y):
+	for i in range(0,8):
+		tempX,tempY=directionsDict(i,x,y)
+		if tempX==startX and tempY==startY:
+			return True
+	return False
 _main_()
